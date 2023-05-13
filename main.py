@@ -5,64 +5,64 @@ from word24 import Bip39Check
 
 
 def get_pattern(pattern_name: str = 'pattern.txt', size: int = 23):
-    """Получение слов из паттерна а также их индекса"""
+    """get words and index from pattern"""
     pattern: Path = Path(pattern_name)
     pattern_lines: list = []
     result_lines: list = []
 
-    with pattern.open('r') as pat:
-        pattern_lines = pat.readlines()
+    with pattern.open('r') as f_pattern:
+        pattern_lines = f_pattern.readlines()
 
     if not pattern_lines:
-        raise Exception('Настройте паттерн правильно')
+        raise Exception('Adjust the drawing correctly')
 
     if len(pattern_lines) != size:
-        raise Exception('Размер паттерна превышает/недостает допустимым нормам.')
+        raise Exception('The size of the pattern does not meet the required standards..')
 
-    for index, row in enumerate(pattern_lines):
+    for i, row in enumerate(pattern_lines):
         if '-' in row:
             continue
-        result_lines.append({'index': index, 'word': row.replace('\n', '')})
-
+        result_lines.append({'index': i, 'word': row.replace('\n', '')})
     return result_lines
 
 
 if __name__ == '__main__':
-    # Получение слов из паттерна для генерации
+    # get words for generated
     secret_keys = get_pattern()
     used_words = [sec['word'] for sec in secret_keys]
 
-    m = Bip39Check('gen_words.txt')
+    m = Bip39Check('generate.txt')
 
-    # Открытие потоков и запись даты
-    common_file = open("common.txt", "a")
-    secret_file = open("secret.txt", "a")
-    common_file.writelines(f'\n\n\n============={datetime.datetime.now()}==============\n\n')
-    secret_file.writelines(f'\n\n\n============={datetime.datetime.now()}==============\n\n')
+    # open writers and write date
+    file_without_replace = open("file_without_replace.txt", "a")
+    file_with_replace = open("file_with_replace.txt", "a")
+    file_without_replace.writelines(f'\n\n\n============={datetime.datetime.now()}==============\n\n')
+    file_with_replace.writelines(f'\n\n\n============={datetime.datetime.now()}==============\n\n')
 
+    # entering phrase col
     repeats: int = int(input('Enter number repeats: '))
 
     for ii in range(repeats):
-        minor_phrase = m.phrase_generate(used_words)
-        m.check_size(minor_phrase)
-        major_phrase = minor_phrase.copy()
+        phrase_without_replace = m.phrase_generate(used_words)
+        m.check_size(phrase_without_replace)
+        phrase_with_replace = phrase_without_replace.copy()
 
-        for index, word in enumerate(major_phrase):
+        for i, word in enumerate(phrase_with_replace):
             for sec in secret_keys:
-                if index == sec['index']:
-                    major_phrase[index] = sec['word']
+                if i == sec['index']:
+                    phrase_with_replace[i] = sec['word']
 
-        m.compute_entropy(major_phrase)
+        m.compute_entropy(phrase_with_replace)
         candidates = m.scan()
 
-        # Добавление 24-го слова
-        major_phrase.append(candidates[0])
-        minor_phrase.append(candidates[0])
+        # adding 24-th word
+        phrase_with_replace.append(candidates[0])
+        phrase_without_replace.append(candidates[0])
 
-        # Запись результатов в файл
-        common_file.writelines(' '.join(minor_phrase) + "\n")
-        secret_file.writelines(' '.join(major_phrase) + "\n")
+        # write result in files
+        file_without_replace.writelines(' '.join(phrase_without_replace) + "\n")
+        file_with_replace.writelines(' '.join(phrase_with_replace) + "\n")
 
-    # Закрытие потоков чтения файла
-    common_file.close()
-    secret_file.close()
+    # closing file writers
+    file_without_replace.close()
+    file_with_replace.close()
